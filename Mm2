@@ -1,0 +1,709 @@
+
+--==================================================
+-- EXZ HUB | MM2
+-- CUSTOM UI - NO RAYFIELD
+--==================================================
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
+
+local Player = Players.LocalPlayer
+
+--==================================================
+-- GUI PARENT
+--==================================================
+
+local GuiParent = game:GetService("CoreGui")
+
+pcall(function()
+    if typeof(gethui) == "function" then
+        GuiParent = gethui()
+    end
+end)
+
+pcall(function()
+    if GuiParent == game:GetService("CoreGui") then
+        GuiParent = Player:WaitForChild("PlayerGui")
+    end
+end)
+
+local OldGui = GuiParent:FindFirstChild("EXZ_HUB")
+if OldGui then
+    OldGui:Destroy()
+end
+
+--==================================================
+-- CLICK SOUND
+--==================================================
+
+local ClickSound = Instance.new("Sound")
+ClickSound.SoundId = "rbxassetid://87437544236708"
+ClickSound.Volume = 1
+ClickSound.Parent = SoundService
+
+local function PlayClick()
+    ClickSound:Stop()
+    ClickSound.TimePosition = 0
+    ClickSound:Play()
+end
+
+--==================================================
+-- UI LIBRARY
+--==================================================
+
+local UILibrary = {}
+
+local function CreateElement(Class, Properties)
+    local Object = Instance.new(Class)
+
+    for Property, Value in pairs(Properties) do
+        Object[Property] = Value
+    end
+
+    return Object
+end
+
+local function AddCorner(Object, Radius)
+    return CreateElement("UICorner", {
+        CornerRadius = UDim.new(0, Radius),
+        Parent = Object
+    })
+end
+
+local function AddStroke(Object, Color, Thickness, Transparency)
+    return CreateElement("UIStroke", {
+        Color = Color,
+        Thickness = Thickness or 2,
+        Transparency = Transparency or 0,
+        Parent = Object
+    })
+end
+
+local CYAN = Color3.fromRGB(0, 200, 255)
+local DARK = Color3.fromRGB(10, 10, 10)
+local PANEL = Color3.fromRGB(25, 25, 25)
+local WHITE = Color3.fromRGB(255, 255, 255)
+
+function UILibrary:CreateWindow(TitleText)
+
+    local Window = {}
+    local Tabs = {}
+    local CurrentTab = nil
+
+    local ScreenGui = CreateElement("ScreenGui", {
+        Name = "EXZ_HUB",
+        Parent = GuiParent,
+        ResetOnSpawn = false,
+        IgnoreGuiInset = true,
+        ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    })
+
+    -- MAIN FRAME
+
+    local MainFrame = CreateElement("Frame", {
+        Name = "MainFrame",
+        Parent = ScreenGui,
+        BackgroundColor3 = DARK,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0.5, -350, 0.5, -250),
+        Size = UDim2.fromOffset(700, 500),
+        ClipsDescendants = true
+    })
+
+    AddCorner(MainFrame, 20)
+    AddStroke(MainFrame, CYAN, 3, 0.25)
+
+    -- TOP BAR
+
+    local TopBar = CreateElement("Frame", {
+        Parent = MainFrame,
+        BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 70)
+    })
+
+    AddCorner(TopBar, 20)
+
+    CreateElement("TextLabel", {
+        Parent = TopBar,
+        BackgroundTransparency = 1,
+        Position = UDim2.fromOffset(25, 0),
+        Size = UDim2.new(0.6, 0, 1, 0),
+        Font = Enum.Font.GothamBlack,
+        Text = TitleText or "EXZ HUB",
+        TextColor3 = CYAN,
+        TextSize = 26,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    -- CLOSE BUTTON
+
+    local CloseButton = CreateElement("TextButton", {
+        Parent = TopBar,
+        BackgroundColor3 = Color3.fromRGB(255, 80, 80),
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, -60, 0.5, -20),
+        Size = UDim2.fromOffset(40, 40),
+        Font = Enum.Font.GothamBold,
+        Text = "X",
+        TextColor3 = WHITE,
+        TextSize = 20
+    })
+
+    AddCorner(CloseButton, 12)
+
+    -- MINIMIZE BUTTON
+
+    local MinimizeButton = CreateElement("TextButton", {
+        Parent = TopBar,
+        BackgroundColor3 = Color3.fromRGB(255, 200, 80),
+        BorderSizePixel = 0,
+        Position = UDim2.new(1, -110, 0.5, -20),
+        Size = UDim2.fromOffset(40, 40),
+        Font = Enum.Font.GothamBold,
+        Text = "-",
+        TextColor3 = WHITE,
+        TextSize = 20
+    })
+
+    AddCorner(MinimizeButton, 12)
+
+    -- SIDEBAR
+
+    local TabContainer = CreateElement("Frame", {
+        Parent = MainFrame,
+        BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+        BorderSizePixel = 0,
+        Position = UDim2.fromOffset(10, 80),
+        Size = UDim2.new(0, 195, 1, -90)
+    })
+
+    AddCorner(TabContainer, 12)
+
+    CreateElement("UIListLayout", {
+        Parent = TabContainer,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 10),
+        HorizontalAlignment = Enum.HorizontalAlignment.Center
+    })
+
+    CreateElement("UIPadding", {
+        Parent = TabContainer,
+        PaddingTop = UDim.new(0, 12)
+    })
+
+    -- CONTENT
+
+    local ContentFrame = CreateElement("Frame", {
+        Parent = MainFrame,
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 215, 0, 80),
+        Size = UDim2.new(1, -225, 1, -90)
+    })
+
+    -- MINIMIZED ICON
+
+    local MiniIcon = CreateElement("Frame", {
+        Parent = ScreenGui,
+        BackgroundColor3 = CYAN,
+        Position = UDim2.new(0, 20, 0.5, -29),
+        Size = UDim2.fromOffset(58, 58),
+        Visible = false,
+        BorderSizePixel = 0
+    })
+
+    AddCorner(MiniIcon, 14)
+    AddStroke(MiniIcon, CYAN, 3)
+
+    local MiniButton = CreateElement("ImageButton", {
+        Parent = MiniIcon,
+        BackgroundColor3 = DARK,
+        Position = UDim2.fromOffset(3, 3),
+        Size = UDim2.new(1, -6, 1, -6),
+        Image = "rbxassetid://84478996527707",
+        ScaleType = Enum.ScaleType.Fit,
+        BorderSizePixel = 0
+    })
+
+    AddCorner(MiniButton, 11)
+
+    MinimizeButton.MouseButton1Click:Connect(function()
+        PlayClick()
+        MainFrame.Visible = false
+        MiniIcon.Visible = true
+    end)
+
+    MiniButton.MouseButton1Click:Connect(function()
+        PlayClick()
+        MiniIcon.Visible = false
+        MainFrame.Visible = true
+    end)
+
+    CloseButton.MouseButton1Click:Connect(function()
+        PlayClick()
+        ScreenGui:Destroy()
+    end)
+
+    -- DRAG WINDOW
+
+    local Dragging = false
+    local DragStart
+    local StartPosition
+
+    TopBar.InputBegan:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1
+        or Input.UserInputType == Enum.UserInputType.Touch then
+
+            Dragging = true
+            DragStart = Input.Position
+            StartPosition = MainFrame.Position
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(Input)
+        if Dragging and (
+            Input.UserInputType == Enum.UserInputType.MouseMovement
+            or Input.UserInputType == Enum.UserInputType.Touch
+        ) then
+
+            local Delta = Input.Position - DragStart
+
+            MainFrame.Position = UDim2.new(
+                StartPosition.X.Scale,
+                StartPosition.X.Offset + Delta.X,
+                StartPosition.Y.Scale,
+                StartPosition.Y.Offset + Delta.Y
+            )
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(Input)
+        if Input.UserInputType == Enum.UserInputType.MouseButton1
+        or Input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = false
+        end
+    end)
+
+    -- TAB SWITCH
+
+    function Window:SwitchToTab(SelectedTab)
+
+        for _, Tab in ipairs(Tabs) do
+            Tab.Page.Visible = false
+            Tab.Button.BackgroundColor3 = PANEL
+            Tab.Button.TextColor3 = Color3.fromRGB(220, 220, 220)
+        end
+
+        SelectedTab.Page.Visible = true
+        SelectedTab.Button.BackgroundColor3 = CYAN
+        SelectedTab.Button.TextColor3 = WHITE
+
+        CurrentTab = SelectedTab
+    end
+
+    -- CREATE TAB
+
+    function Window:CreateTab(Name)
+
+        local Tab = {}
+
+        local TabButton = CreateElement("TextButton", {
+            Parent = TabContainer,
+            BackgroundColor3 = PANEL,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, -20, 0, 50),
+            Font = Enum.Font.GothamBold,
+            Text = Name,
+            TextColor3 = WHITE,
+            TextSize = 18
+        })
+
+        AddCorner(TabButton, 12)
+        AddStroke(TabButton, CYAN, 2, 0.6)
+
+        local Page = CreateElement("ScrollingFrame", {
+            Parent = ContentFrame,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 1, 0),
+            CanvasSize = UDim2.new(0, 0, 0, 0),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            ScrollBarThickness = 5,
+            ScrollBarImageColor3 = CYAN,
+            Visible = false
+        })
+
+        CreateElement("UIListLayout", {
+            Parent = Page,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 15)
+        })
+
+        CreateElement("UIPadding", {
+            Parent = Page,
+            PaddingTop = UDim.new(0, 8),
+            PaddingBottom = UDim.new(0, 12),
+            PaddingLeft = UDim.new(0, 5)
+        })
+
+        Tab.Button = TabButton
+        Tab.Page = Page
+
+        table.insert(Tabs, Tab)
+
+        TabButton.MouseButton1Click:Connect(function()
+            PlayClick()
+            Window:SwitchToTab(Tab)
+        end)
+
+        if #Tabs == 1 then
+            Window:SwitchToTab(Tab)
+        end
+
+        -- BUTTON
+
+        function Tab:CreateButton(Text, Callback)
+
+            local Button = CreateElement("TextButton", {
+                Parent = Page,
+                BackgroundColor3 = PANEL,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, -10, 0, 55),
+                Font = Enum.Font.GothamBold,
+                Text = Text,
+                TextColor3 = WHITE,
+                TextSize = 18
+            })
+
+            AddCorner(Button, 12)
+            AddStroke(Button, CYAN, 2, 0.7)
+
+            Button.MouseButton1Click:Connect(function()
+                PlayClick()
+
+                if Callback then
+                    local Success, ErrorMessage = pcall(Callback)
+                    if not Success then
+                        warn("[EXZ HUB]", ErrorMessage)
+                    end
+                end
+            end)
+
+            return Button
+        end
+
+        -- TOGGLE
+
+        function Tab:CreateToggle(Text, Callback)
+
+            local Frame = CreateElement("Frame", {
+                Parent = Page,
+                BackgroundColor3 = PANEL,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, -10, 0, 55)
+            })
+
+            AddCorner(Frame, 12)
+
+            CreateElement("TextLabel", {
+                Parent = Frame,
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(15, 0),
+                Size = UDim2.new(0.65, 0, 1, 0),
+                Font = Enum.Font.GothamBold,
+                Text = Text,
+                TextColor3 = WHITE,
+                TextSize = 17,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+
+            local ToggleButton = CreateElement("TextButton", {
+                Parent = Frame,
+                BackgroundColor3 = Color3.fromRGB(45, 45, 45),
+                BorderSizePixel = 0,
+                Position = UDim2.new(1, -75, 0.5, -15),
+                Size = UDim2.fromOffset(60, 30),
+                Text = ""
+            })
+
+            AddCorner(ToggleButton, 20)
+
+            local Indicator = CreateElement("Frame", {
+                Parent = ToggleButton,
+                BackgroundColor3 = Color3.fromRGB(170, 170, 170),
+                BorderSizePixel = 0,
+                Position = UDim2.fromOffset(5, 5),
+                Size = UDim2.fromOffset(20, 20)
+            })
+
+            AddCorner(Indicator, 20)
+
+            local Enabled = false
+
+            ToggleButton.MouseButton1Click:Connect(function()
+                PlayClick()
+
+                Enabled = not Enabled
+
+                if Enabled then
+                    TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = CYAN
+                    }):Play()
+
+                    TweenService:Create(Indicator, TweenInfo.new(0.2), {
+                        Position = UDim2.new(1, -25, 0, 5),
+                        BackgroundColor3 = WHITE
+                    }):Play()
+                else
+                    TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+                        BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                    }):Play()
+
+                    TweenService:Create(Indicator, TweenInfo.new(0.2), {
+                        Position = UDim2.fromOffset(5, 5),
+                        BackgroundColor3 = Color3.fromRGB(170, 170, 170)
+                    }):Play()
+                end
+
+                if Callback then
+                    Callback(Enabled)
+                end
+            end)
+
+            return Frame
+        end
+
+        -- SLIDER
+
+        function Tab:CreateSlider(Text, Min, Max, Default, Callback)
+
+            local Frame = CreateElement("Frame", {
+                Parent = Page,
+                BackgroundColor3 = PANEL,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, -10, 0, 70)
+            })
+
+            AddCorner(Frame, 12)
+
+            CreateElement("TextLabel", {
+                Parent = Frame,
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(15, 5),
+                Size = UDim2.new(0.6, 0, 0, 25),
+                Font = Enum.Font.GothamBold,
+                Text = Text,
+                TextColor3 = WHITE,
+                TextSize = 17,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+
+            local ValueLabel = CreateElement("TextLabel", {
+                Parent = Frame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0.6, 0, 0, 5),
+                Size = UDim2.new(0.35, 0, 0, 25),
+                Font = Enum.Font.GothamBold,
+                Text = tostring(Default),
+                TextColor3 = CYAN,
+                TextSize = 16,
+                TextXAlignment = Enum.TextXAlignment.Right
+            })
+
+            local Bar = CreateElement("TextButton", {
+                Parent = Frame,
+                BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+                BorderSizePixel = 0,
+                Position = UDim2.new(0, 15, 0, 45),
+                Size = UDim2.new(1, -30, 0, 9),
+                Text = ""
+            })
+
+            AddCorner(Bar, 10)
+
+            local Fill = CreateElement("Frame", {
+                Parent = Bar,
+                BackgroundColor3 = CYAN,
+                BorderSizePixel = 0,
+                Size = UDim2.new(0, 0, 1, 0)
+            })
+
+            AddCorner(Fill, 10)
+
+            local Value = Default
+            local Sliding = false
+
+            local function SetValue(NewValue)
+                Value = math.clamp(
+                    math.floor(NewValue + 0.5),
+                    Min,
+                    Max
+                )
+
+                local Ratio = (Value - Min) / (Max - Min)
+
+                Fill.Size = UDim2.new(Ratio, 0, 1, 0)
+                ValueLabel.Text = tostring(Value)
+
+                if Callback then
+                    Callback(Value)
+                end
+            end
+
+            local function Update(Input)
+                local Ratio = math.clamp(
+                    (Input.Position.X - Bar.AbsolutePosition.X)
+                    / Bar.AbsoluteSize.X,
+                    0,
+                    1
+                )
+
+                SetValue(Min + Ratio * (Max - Min))
+            end
+
+            Bar.InputBegan:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1
+                or Input.UserInputType == Enum.UserInputType.Touch then
+                    Sliding = true
+                    PlayClick()
+                    Update(Input)
+                end
+            end)
+
+            UIS.InputChanged:Connect(function(Input)
+                if Sliding and (
+                    Input.UserInputType == Enum.UserInputType.MouseMovement
+                    or Input.UserInputType == Enum.UserInputType.Touch
+                ) then
+                    Update(Input)
+                end
+            end)
+
+            UIS.InputEnded:Connect(function(Input)
+                if Input.UserInputType == Enum.UserInputType.MouseButton1
+                or Input.UserInputType == Enum.UserInputType.Touch then
+                    Sliding = false
+                end
+            end)
+
+            SetValue(Default)
+            return Frame
+        end
+
+        -- KEYBIND
+
+        function Tab:CreateKeybind(Text, Callback)
+
+            local Frame = CreateElement("Frame", {
+                Parent = Page,
+                BackgroundColor3 = PANEL,
+                BorderSizePixel = 0,
+                Size = UDim2.new(1, -10, 0, 55)
+            })
+
+            AddCorner(Frame, 12)
+
+            CreateElement("TextLabel", {
+                Parent = Frame,
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(15, 0),
+                Size = UDim2.new(0.6, 0, 1, 0),
+                Font = Enum.Font.GothamBold,
+                Text = Text,
+                TextColor3 = WHITE,
+                TextSize = 17,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+
+            local KeyButton = CreateElement("TextButton", {
+                Parent = Frame,
+                BackgroundColor3 = Color3.fromRGB(45, 45, 45),
+                Position = UDim2.new(1, -105, 0.5, -15),
+                Size = UDim2.fromOffset(90, 30),
+                Font = Enum.Font.GothamBold,
+                Text = "None",
+                TextColor3 = WHITE,
+                TextSize = 15
+            })
+
+            AddCorner(KeyButton, 9)
+
+            local SelectedKey = nil
+            local Waiting = false
+
+            KeyButton.MouseButton1Click:Connect(function()
+                PlayClick()
+                Waiting = true
+                KeyButton.Text = "Press key"
+            end)
+
+            UIS.InputBegan:Connect(function(Input, Processed)
+                if Processed then return end
+
+                if Waiting and Input.UserInputType == Enum.UserInputType.Keyboard then
+                    SelectedKey = Input.KeyCode
+                    KeyButton.Text = SelectedKey.Name
+                    Waiting = false
+                    return
+                end
+
+                if SelectedKey and Input.KeyCode == SelectedKey then
+                    if Callback then
+                        Callback()
+                    end
+                end
+            end)
+
+            return Frame
+        end
+
+        return Tab
+    end
+
+    return Window
+end
+
+--==================================================
+-- CREATE EXZ HUB
+--==================================================
+
+local Window = UILibrary:CreateWindow("EXZ HUB | MM2")
+
+local MainTab = Window:CreateTab("Main")
+local PlayerTab = Window:CreateTab("Player")
+local ESPTab = Window:CreateTab("ESP")
+local CreditsTab = Window:CreateTab("Credits")
+
+--==================================================
+-- PLAYER FEATURES
+--==================================================
+
+local FlyEnabled = false
+local FlySpeed = 60
+local WalkSpeed = 16
+local NoclipEnabled = false
+
+local FlyConnection
+local NoclipConnection
+local BodyVelocity
+local BodyGyro
+
+local function GetCharacter()
+    return Player.Character
+end
+
+local function GetHumanoid()
+    local Character = GetCharacter()
+    return Character and Character:FindFirstChildOfClass("Humanoid")
+end
+
+-- WALK SPEED
+
+PlayerTab:CreateSlider("WalkSpeed", 16, 150, 16, function(Value)
+    WalkSpeed = Value
+
+    local Humanoid = GetHumanoid()
+    if Humanoid then
+        Humanoid.WalkSp
